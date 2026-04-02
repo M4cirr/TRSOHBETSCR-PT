@@ -1,0 +1,471 @@
+-- [[ GL1TCH BABA V7.2.5 - BY.M4CİRR (AYI ABBAS 🪴 STYLE - EMOJİ FIX) ]] --
+
+_G.CenterPhotoID = "109496280495094" -- 1. Fotoğraf (Merkezdeki Kutu - Sopranos & Sen)
+_G.TopRightLogoID = "73780209019660"  -- 2. Fotoğraf (Sağ Üstteki Yuvarlak - Bitki)
+
+local player = game.Players.LocalPlayer
+local coreGui = pcall(function() return game:GetService("CoreGui") end) and game:GetService("CoreGui") or player:WaitForChild("PlayerGui")
+local runService = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+
+if coreGui:FindFirstChild("MafyaMenuV7") then coreGui.MafyaMenuV7:Destroy() end
+
+_G.OrbitAktif = false
+_G.FlyAktif = false
+_G.ParaESPAktif = false
+_G.StalkerAktif = false
+_G.MagnetAktif = false 
+_G.FlingAktif = false 
+_G.CustomRoleText = "" 
+local isFakeAFK = false
+local targetBall = nil
+local stalkTarget = nil 
+local moneyCache = {}
+local objectCache = {} 
+local blacklist = {} 
+local flySpeed = 1.5 
+
+-- [[ KOALA SÜLÜK ANİMASYONLARI ]]
+local stalkAnimR15 = Instance.new("Animation")
+stalkAnimR15.AnimationId = "rbxassetid://2506281703" 
+local stalkAnimR6 = Instance.new("Animation")
+stalkAnimR6.AnimationId = "rbxassetid://179224234" 
+local currentStalkerAnim = nil
+
+-- --- ANA EKRAN ---
+local sg = Instance.new("ScreenGui", coreGui)
+sg.Name = "MafyaMenuV7"
+sg.ResetOnSpawn = false
+
+-- 👁️ MENÜ GİZLE/GÖSTER BUTONU
+local toggleMenuBtn = Instance.new("TextButton", sg)
+toggleMenuBtn.Size = UDim2.new(0, 45, 0, 45)
+toggleMenuBtn.Position = UDim2.new(0.01, 0, 0.4, 0) 
+toggleMenuBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+toggleMenuBtn.Text = "👁️"
+toggleMenuBtn.TextSize = 20
+Instance.new("UICorner", toggleMenuBtn).CornerRadius = UDim.new(1, 0) 
+local toggleStroke = Instance.new("UIStroke", toggleMenuBtn)
+toggleStroke.Thickness = 2
+toggleStroke.Color = Color3.fromRGB(139, 115, 85) 
+
+-- --- ANA PANEL (SİYAH ZEMİN, ALTIN ÇERÇEVE) ---
+local main = Instance.new("Frame", sg)
+main.Size = UDim2.new(0, 460, 0, 520) 
+main.Position = UDim2.new(0.5, -230, 0.5, -260) 
+main.BackgroundColor3 = Color3.fromRGB(8, 8, 10) 
+main.BorderSizePixel = 0
+main.Active = true; main.Draggable = true
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
+local mainStroke = Instance.new("UIStroke", main)
+mainStroke.Thickness = 2
+mainStroke.Color = Color3.fromRGB(139, 115, 85) 
+
+toggleMenuBtn.MouseButton1Click:Connect(function()
+    main.Visible = not main.Visible
+    toggleMenuBtn.Text = main.Visible and "👁️" or "🙈"
+end)
+
+-- BAŞLIK 1: BY.M4CİRR
+local titleLabel = Instance.new("TextLabel", main)
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.Position = UDim2.new(0, 0, 0, 10)
+titleLabel.Text = "BY.M4CİRR" 
+titleLabel.TextColor3 = Color3.fromRGB(180, 150, 100) 
+titleLabel.Font = Enum.Font.GothamBlack
+titleLabel.TextSize = 24
+titleLabel.BackgroundTransparency = 1
+
+-- BAŞLIK 2: AYI ABBAS STYLE
+local subTitleLabel = Instance.new("TextLabel", main)
+subTitleLabel.Size = UDim2.new(1, 0, 0, 20)
+subTitleLabel.Position = UDim2.new(0, 0, 0, 40)
+subTitleLabel.Text = "Ayı Abbas 🪴 Style" 
+subTitleLabel.TextColor3 = Color3.fromRGB(210, 210, 200) 
+subTitleLabel.Font = Enum.Font.GothamMedium
+subTitleLabel.TextSize = 14
+subTitleLabel.BackgroundTransparency = 1
+
+-- FPS SAYACI (Sol Üst)
+local fpsLabel = Instance.new("TextLabel", main)
+fpsLabel.Size = UDim2.new(0, 80, 0, 20)
+fpsLabel.Position = UDim2.new(0, 15, 0, 15) 
+fpsLabel.Text = "FPS: 60"
+fpsLabel.TextColor3 = Color3.fromRGB(150, 150, 150) 
+fpsLabel.Font = Enum.Font.Gotham
+fpsLabel.TextSize = 11
+fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
+fpsLabel.BackgroundTransparency = 1
+
+-- 👤 OYUNCU İSMİ
+local usernameLabel = Instance.new("TextLabel", main)
+usernameLabel.Size = UDim2.new(0, 150, 0, 15)
+usernameLabel.Position = UDim2.new(0, 15, 0, 35) 
+usernameLabel.Text = "İsim: " .. player.Name 
+usernameLabel.TextColor3 = Color3.fromRGB(150, 150, 150) 
+usernameLabel.Font = Enum.Font.GothamMedium
+usernameLabel.TextSize = 10
+usernameLabel.TextXAlignment = Enum.TextXAlignment.Left
+usernameLabel.BackgroundTransparency = 1
+
+task.spawn(function()
+    while task.wait(0.5) do 
+        local currentFPS = math.floor(1/runService.RenderStepped:Wait())
+        fpsLabel.Text = "FPS: " .. currentFPS
+    end
+end)
+
+-- 🖼️ 1. FOTOĞRAF (MERKEZ KUTU: Sopranos & Sen)
+local photo1 = Instance.new("ImageLabel", main)
+photo1.Size = UDim2.new(0, 180, 0, 140)
+photo1.Position = UDim2.new(0.5, -90, 0, 70) 
+photo1.Image = "rbxthumb://type=Asset&id=" .. _G.CenterPhotoID .. "&w=420&h=420" 
+photo1.ScaleType = Enum.ScaleType.Fit 
+photo1.BackgroundTransparency = 1
+Instance.new("UICorner", photo1).CornerRadius = UDim.new(0, 6)
+
+-- 🖼️ 2. FOTOĞRAF (SAĞ ÜST YUVARLAK: Bitki)
+local photo2 = Instance.new("ImageLabel", main)
+photo2.Size = UDim2.new(0, 80, 0, 80)
+photo2.Position = UDim2.new(1, -95, 0, 10) 
+photo2.Image = "rbxthumb://type=Asset&id=" .. _G.TopRightLogoID .. "&w=150&h=150" 
+photo2.ScaleType = Enum.ScaleType.Crop 
+photo2.BackgroundTransparency = 1
+Instance.new("UICorner", photo2).CornerRadius = UDim.new(1, 0)
+local stroke2 = Instance.new("UIStroke", photo2)
+stroke2.Thickness = 3.5; stroke2.Color = Color3.fromRGB(139, 115, 85)
+
+-- BUTON ÜRETİCİ
+local function createButton(text, pos, customColor)
+    local btn = Instance.new("TextButton", main)
+    btn.Size = UDim2.new(0, 200, 0, 35)
+    btn.Position = pos
+    btn.Text = text
+    btn.BackgroundColor3 = customColor or Color3.fromRGB(15, 15, 18) 
+    btn.BackgroundTransparency = 0 
+    btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 11
+    btn.AutoButtonColor = true
+    
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 1
+    stroke.Color = Color3.fromRGB(139, 115, 85) 
+    stroke.Transparency = 0.2
+    
+    return btn
+end
+
+-- 2 SÜTUNLU DİZİLİM
+-- SOL SÜTUN (X: 20)
+local btnPara = createButton("YEŞİL PARAYA GİT 💵", UDim2.new(0, 20, 0, 230), Color3.fromRGB(25, 45, 25))
+local btnMagnet = createButton("OBJE MIKNATISI: OFF 🧲", UDim2.new(0, 20, 0, 275)) 
+-- M4CİRR AYARI: Hava Emojisi Eklendi, OFF'un yanına alındı
+local btnFly = createButton("UÇUŞ (FLY): OFF 💨", UDim2.new(0, 20, 0, 320))
+local btnAFK = createButton("HAYALET (AFK): OFF 👻", UDim2.new(0, 20, 0, 365))
+
+-- SAĞ SÜTUN (X: 240)
+local btnTop = createButton("DÖNEN TOP (ORBIT): OFF 🌀", UDim2.new(0, 240, 0, 230))
+local btnFling = createButton("FIRTINA FLING: OFF 🌪️", UDim2.new(0, 240, 0, 275)) 
+local btnESP = createButton("PARA ESP: OFF 🟢", UDim2.new(0, 240, 0, 320))
+-- M4CİRR AYARI: Hamile Emojisi OFF'un yanına hizalandı
+local btnStalker = createButton("FanFinFon: OFF 🤰", UDim2.new(0, 240, 0, 365)) 
+
+-- ✍️ RÜTBE YAZI KUTUSU 
+local rankBox = Instance.new("TextBox", main)
+rankBox.Size = UDim2.new(0, 420, 0, 35)
+rankBox.Position = UDim2.new(0, 20, 0, 420)
+rankBox.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+rankBox.TextColor3 = Color3.fromRGB(230, 230, 230) 
+rankBox.PlaceholderText = "RÜTBENİ YAZ (Örn: PATRON)"
+rankBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+rankBox.Font = Enum.Font.GothamBold
+rankBox.TextSize = 11
+rankBox.Text = ""
+Instance.new("UICorner", rankBox).CornerRadius = UDim.new(0, 4)
+
+local boxStroke1 = Instance.new("UIStroke", rankBox)
+boxStroke1.Thickness = 1.5; boxStroke1.Color = Color3.fromRGB(139, 115, 85)
+boxStroke1.Transparency = 0.2
+
+-- ALT BUTONLAR (Y: 475)
+local btnApply = createButton("RÜTBEYİ UYGULA 👑", UDim2.new(0, 20, 0, 475), Color3.fromRGB(40, 35, 20))
+local btnKapat = createButton("HİLEYİ KAPAT ❌", UDim2.new(0, 240, 0, 475), Color3.fromRGB(50, 15, 15))
+
+-- ==================== MOTOR (CHEAT LOGIC) ==================== --
+
+task.spawn(function()
+    while task.wait(1.5) do 
+        local tempMoney = {}
+        local tempObj = {}
+        local allParts = workspace:GetDescendants()
+        
+        for i = 1, #allParts do
+            if i % 1500 == 0 then task.wait() end 
+            local v = allParts[i]
+            if v:IsA("BasePart") then
+                if v.Transparency < 0.5 and not blacklist[v] and v.Size.X < 4 and v.Size.Z < 4 then
+                    local n = v.Name:lower()
+                    local pName = v.Parent and v.Parent.Name:lower() or ""
+                    if not n:find("table") and not n:find("masa") and not n:find("speed") and not n:find("spawn") and not pName:find("table") and not pName:find("masa") then
+                        if v:FindFirstChildOfClass("TouchTransmitter") or n:find("para") or n:find("money") or n:find("cash") or n:find("deste") then
+                            if v:IsDescendantOf(workspace) then table.insert(tempMoney, v) end
+                        end
+                    end
+                end
+                
+                if (_G.MagnetAktif or _G.FlingAktif) and not v.Anchored and v.Size.Magnitude < 20 and v ~= targetBall then
+                    if not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+                        table.insert(tempObj, v)
+                    end
+                end
+            end
+        end
+        moneyCache = tempMoney
+        objectCache = tempObj
+    end
+end)
+
+btnPara.MouseButton1Click:Connect(function()
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if hrp and #moneyCache > 0 then
+        table.sort(moneyCache, function(a, b) return (a.Position - hrp.Position).Magnitude < (b.Position - hrp.Position).Magnitude end)
+        local chosen = moneyCache[1]
+        hrp.CFrame = CFrame.new(chosen.Position + Vector3.new(3, 1, 3))
+        blacklist[chosen] = true; task.delay(4, function() blacklist[chosen] = nil end)
+    end
+end)
+
+runService.Heartbeat:Connect(function()
+    local char = player.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    pcall(function()
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("TextLabel") and v:FindFirstAncestorOfClass("BillboardGui") and not v:FindFirstAncestor("MafyaMenuV7") then
+                if v.Text == "Üye" or v.Name == "M4cirrRank" then
+                    if _G.CustomRoleText ~= "" then
+                        v.Name = "M4cirrRank" 
+                        v.Text = _G.CustomRoleText
+                        v.TextColor3 = Color3.fromRGB(255, 255, 255) 
+                        v.TextTransparency = 0 
+                        v.TextStrokeTransparency = 0
+                        v.Font = Enum.Font.GothamBlack 
+                    end
+                end
+            end
+        end
+    end)
+    
+    if _G.FlyAktif then
+        player.Character.Humanoid.PlatformStand = true; local cam = workspace.CurrentCamera.CFrame; local moveDir = Vector3.new(0,0,0)
+        if uis:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.LookVector end
+        if uis:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.LookVector end
+        if uis:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + cam.RightVector end
+        if uis:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.RightVector end
+        if uis:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0,1,0) end
+        if uis:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir = moveDir - Vector3.new(0,1,0) end
+        if moveDir.Magnitude > 0 then hrp.CFrame = hrp.CFrame + (moveDir * flySpeed) end
+        hrp.Velocity = Vector3.new(0, 0.1, 0)
+    end
+    
+    if _G.OrbitAktif and targetBall then
+        pcall(function()
+            targetBall.CanCollide = false; targetBall.Velocity = Vector3.new(0,0,0)
+            local offset = Vector3.new(math.cos(tick()*10)*8, 1.5, math.sin(tick()*10)*8)
+            targetBall.CFrame = CFrame.new(hrp.Position + offset)
+        end)
+    end
+    
+    if _G.MagnetAktif or _G.FlingAktif then
+        pcall(function()
+            local slowSpeed = tick() * 2 
+            local stormSpeed = tick() * 25 
+            for i, v in pairs(objectCache) do
+                if v and v.Parent and not v.Anchored then
+                    local dist = (v.Position - hrp.Position).Magnitude
+                    if dist < 60 then
+                        local objSize = v.Size.Magnitude 
+                        
+                        if _G.FlingAktif then
+                            local offsetAngle = stormSpeed + (i * 0.5)
+                            local dynRadius = 6 + (objSize / 1.5)
+                            local targetPos = hrp.Position + Vector3.new(math.cos(offsetAngle) * dynRadius, 1.5, math.sin(offsetAngle) * dynRadius)
+                            
+                            v.Velocity = (targetPos - v.Position) * 150 
+                            v.RotVelocity = Vector3.new(0, 50000, 0) 
+                            
+                        elseif _G.MagnetAktif then
+                            local offsetAngle = slowSpeed + (i * 0.5)
+                            local dynRadius = 4 + (objSize / 3)
+                            local floatHeight = 8 + math.sin(tick()*2 + i) 
+                            local targetPos = hrp.Position + Vector3.new(math.cos(offsetAngle) * dynRadius, floatHeight, math.sin(offsetAngle) * dynRadius)
+                            
+                            v.Velocity = (targetPos - v.Position) * 30 
+                            v.RotVelocity = Vector3.new(0, 0, 0) 
+                        end
+                    end
+                end
+            end
+        end)
+    end
+    
+    -- FANFİNFON 🤰
+    if _G.StalkerAktif and stalkTarget and stalkTarget.Character then
+        local targetHrp = stalkTarget.Character:FindFirstChild("HumanoidRootPart")
+        if targetHrp then 
+            local baseOffset = CFrame.new(0, 0.6, 1.0) 
+            local zPump = math.sin(tick() * 25) * 0.5
+            local pumpOffset = CFrame.new(0, 0, zPump)
+            local leanForward = CFrame.Angles(math.rad(-25), 0, 0)
+            
+            hrp.CFrame = targetHrp.CFrame * baseOffset * pumpOffset * leanForward
+            hrp.Velocity = Vector3.new(0, 0, 0) 
+        end
+    end
+end)
+
+-- BUTON İŞLEVLERİ (Aç/Kapa Yazı Ayarları Da Hizalandı)
+btnFly.MouseButton1Click:Connect(function()
+    _G.FlyAktif = not _G.FlyAktif
+    btnFly.Text = _G.FlyAktif and "UÇUŞ (FLY): ON 💨" or "UÇUŞ (FLY): OFF 💨"
+    btnFly.BackgroundColor3 = _G.FlyAktif and Color3.fromRGB(45, 70, 45) or Color3.fromRGB(15, 15, 18)
+    if not _G.FlyAktif and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.PlatformStand = false end
+end)
+
+btnTop.MouseButton1Click:Connect(function()
+    _G.OrbitAktif = not _G.OrbitAktif
+    btnTop.Text = _G.OrbitAktif and "DÖNEN TOP: ON 🌀" or "DÖNEN TOP (ORBIT): OFF"
+    btnTop.BackgroundColor3 = _G.OrbitAktif and Color3.fromRGB(45, 70, 45) or Color3.fromRGB(15, 15, 18)
+    if _G.OrbitAktif then
+        targetBall = nil
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and (v.Name:lower():find("ball") or v.Name:lower():find("top")) then targetBall = v break end
+        end
+    end
+end)
+
+btnMagnet.MouseButton1Click:Connect(function()
+    _G.MagnetAktif = not _G.MagnetAktif
+    btnMagnet.Text = _G.MagnetAktif and "MIKNATIS: AKTİF 🧲" or "OBJE MIKNATISI: OFF 🧲"
+    btnMagnet.BackgroundColor3 = _G.MagnetAktif and Color3.fromRGB(100, 70, 30) or Color3.fromRGB(15, 15, 18)
+    if not _G.MagnetAktif and not _G.FlingAktif then objectCache = {} end
+end)
+
+btnFling.MouseButton1Click:Connect(function()
+    _G.FlingAktif = not _G.FlingAktif
+    btnFling.Text = _G.FlingAktif and "FIRTINA: AKTİF 🌪️" or "FIRTINA FLING: OFF 🌪️"
+    btnFling.BackgroundColor3 = _G.FlingAktif and Color3.fromRGB(90, 30, 30) or Color3.fromRGB(15, 15, 18)
+    if not _G.MagnetAktif and not _G.FlingAktif then objectCache = {} end
+end)
+
+btnESP.MouseButton1Click:Connect(function()
+    _G.ParaESPAktif = not _G.ParaESPAktif
+    btnESP.Text = _G.ParaESPAktif and "ESP: AÇIK 🟢" or "PARA ESP: OFF"
+    btnESP.BackgroundColor3 = _G.ParaESPAktif and Color3.fromRGB(45, 70, 45) or Color3.fromRGB(15, 15, 18)
+    if not _G.ParaESPAktif then
+        for _, v in pairs(workspace:GetDescendants()) do if v.Name == "ParaTracker" then v:Destroy() end end
+    end
+end)
+
+btnAFK.MouseButton1Click:Connect(function()
+    isFakeAFK = not isFakeAFK
+    btnAFK.Text = isFakeAFK and "HAYALET (AFK): ON 👻" or "HAYALET (FAKE AFK): OFF"
+    btnAFK.BackgroundColor3 = isFakeAFK and Color3.fromRGB(60, 40, 80) or Color3.fromRGB(15, 15, 18)
+    pcall(function()
+        if firesignal then
+            if isFakeAFK then firesignal(uis.WindowFocusReleased) else firesignal(uis.WindowFocused) end
+        end
+        for _, remote in pairs(game.ReplicatedStorage:GetDescendants()) do
+            if remote:IsA("RemoteEvent") and (remote.Name:lower():find("afk") or remote.Name:lower():find("away")) then
+                remote:FireServer(isFakeAFK)
+            end
+        end
+    end)
+end)
+
+btnStalker.MouseButton1Click:Connect(function()
+    _G.StalkerAktif = not _G.StalkerAktif
+    btnStalker.Text = _G.StalkerAktif and "FanFinFon: ON 🤰" or "FanFinFon: OFF 🤰"
+    btnStalker.BackgroundColor3 = _G.StalkerAktif and Color3.fromRGB(45, 70, 45) or Color3.fromRGB(15, 15, 18)
+    
+    local char = player.Character; local hum = char and char:FindFirstChild("Humanoid")
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if _G.StalkerAktif then
+        if hrp and hum then
+            local closestDist = math.huge; stalkTarget = nil
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    local dist = (p.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                    if dist < closestDist then closestDist = dist; stalkTarget = p end
+                end
+            end
+            if stalkTarget then
+                local animator = hum:FindFirstChildOfClass("Animator") or hum
+                local animToLoad = (hum.RigType == Enum.HumanoidRigType.R15) and stalkAnimR15 or stalkAnimR6
+                currentStalkerAnim = animator:LoadAnimation(animToLoad)
+                currentStalkerAnim.Priority = Enum.AnimationPriority.Action 
+                currentStalkerAnim:Play()
+            else
+                btnStalker.Text = "KİMSE BULUNAMADI! ❌"; _G.StalkerAktif = false
+                task.wait(1); btnStalker.Text = "FanFinFon: OFF 🤰"
+                btnStalker.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+            end
+        end
+    else 
+        stalkTarget = nil 
+        if currentStalkerAnim then
+            currentStalkerAnim:Stop()
+            currentStalkerAnim = nil
+        end
+    end
+end)
+
+btnApply.MouseButton1Click:Connect(function()
+    _G.CustomRoleText = rankBox.Text
+    
+    btnApply.Text = "RÜTBE İŞLENDİ ✅"
+    btnApply.BackgroundColor3 = Color3.fromRGB(45, 70, 45)
+    task.wait(1.5)
+    btnApply.Text = "RÜTBEYİ UYGULA 👑"
+    btnApply.BackgroundColor3 = Color3.fromRGB(40, 35, 20)
+end)
+
+runService.RenderStepped:Connect(function()
+    if _G.ParaESPAktif then
+        for _, v in pairs(moneyCache) do
+            if v and v.Parent and v.Transparency < 0.5 and not v:FindFirstChild("ParaTracker") then
+                local bbg = Instance.new("BillboardGui", v)
+                bbg.Name = "ParaTracker"; bbg.AlwaysOnTop = true; bbg.Size = UDim2.new(0, 50, 0, 50); bbg.ExtentsOffset = Vector3.new(0, 3, 0)
+                local txt = Instance.new("TextLabel", bbg)
+                txt.Size = UDim2.new(1, 0, 1, 0); txt.BackgroundTransparency = 1; txt.Text = "💵"; txt.TextSize = 25; txt.Font = Enum.Font.GothamBold; txt.TextColor3 = Color3.fromRGB(180, 150, 100)
+            end
+        end
+    end
+end)
+
+btnKapat.MouseButton1Click:Connect(function()
+    _G.FlyAktif = false; _G.OrbitAktif = false; _G.ParaESPAktif = false; _G.StalkerAktif = false; _G.MagnetAktif = false; _G.FlingAktif = false
+    _G.CustomRoleText = ""
+    stalkTarget = nil; objectCache = {}
+    if currentStalkerAnim then currentStalkerAnim:Stop(); currentStalkerAnim = nil end
+    local char = player.Character
+    if char then
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("TextLabel") and (v.Text == "Üye" or v.Name == "M4cirrRank") then
+                v.Name = "RankLabel"
+                v.Text = "Üye"
+                v.TextColor3 = Color3.new(1, 1, 1) 
+                v.TextTransparency = 0 
+                v.TextStrokeTransparency = 0
+                v.Font = Enum.Font.SourceSansBold
+            end
+        end
+    end
+    for _, v in pairs(workspace:GetDescendants()) do if v.Name == "ParaTracker" then v:Destroy() end end
+    sg:Destroy()
+end)
